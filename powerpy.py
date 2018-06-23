@@ -106,8 +106,8 @@ class PowerPy(daemon):
         print("\n\n ------------------------ \n\n")
 
 if __name__ == "__main__":
-    daemon = PowerPy('/tmp/powerpy.pid')
-    if len(sys.argv) == 2:
+    if len(sys.argv) == 3:
+        daemon = PowerPy(sys.argv[2])
         if 'start' == sys.argv[1]:
             daemon.start()
         elif 'stop' == sys.argv[1]:
