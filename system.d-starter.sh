@@ -10,7 +10,7 @@
 ### END INIT INFO
 
 dir="/home/tomi/PowerPy"
-cmd="python3 powerpy.py"
+cmd="python3 power.py"
 user=""
 
 name=`basename $0`
