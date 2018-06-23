@@ -1,5 +1,6 @@
 import sys
 import subprocess 
+import configparser
 from time import sleep
 
 from deamon import daemon
@@ -11,18 +12,18 @@ class PowerPy(daemon):
 
         super().__init__(pidfile)
 
-        self.observedPorts = ["80", "22", "443"]
-        self.observationInterval = 5
-        self.observationState = 1
-        self.inactiveTime = 300
-        self.haltCommand = "echo VEGE"
+        self.observedPorts = {"TCP": [], "UDP": []}
+        self.observationInterval = None
+        self.inactiveTime = None
+        self.haltCommand = None
+        self.debug = None
 
-        self.debug = 1
+        self.__readConf()
 
         self.stopper = Stopper()
 
     def run(self):
-        while self.observationState:
+        while True:
             if self.debug:
                 self.__printDebug()
             
@@ -37,6 +38,27 @@ class PowerPy(daemon):
         
             sleep(self.observationInterval)
         self.__runCommand(self.haltCommand)
+
+    def __readConf(self):
+        config = configparser.ConfigParser()
+        config.read("config.ini")
+
+        self.inactiveTime = config["BASIC"].getint("inactiveTime")
+        self.observationInterval = config["BASIC"].getint("checkInterval")
+        self.debug = config["BASIC"].getint("debug")
+        self.haltCommand = config["BASIC"]["haltCommand"]
+
+        for protocol in ["TCP", "UDP"]:
+            if protocol in config:
+                self.observedPorts[protocol] = [val for key, val in config[protocol].items()]
+
+        if "TCP/UDP" in config:
+            for key, val in config['TCP/UDP'].items():
+                if val not in self.observedPorts["TCP"]:
+                    self.observedPorts["TCP"].append(val)
+                if val not in self.observedPorts["UDP"]:
+                    self.observedPorts["UDP"].append(val)
+
 
     def __getActivePorts(self):
         output = self.__runCommand("netstat -antu | grep ESTABLISHED").decode('UTF-8')
@@ -59,19 +81,21 @@ class PowerPy(daemon):
         4 - Foreign Address
         5 - State (LISTEN / ESTABLISHED / TIME_WAIT / CLOSE_WAIT)
         """
-        ports = []
+        ports = {"TCP":[], "UDP":[]}
         for line in str(output).splitlines():
             connection = line.split()
             ip = connection[3]
-            ports.append(ip.split(":")[1])
+
+            ports[str(connection[0]).upper()].append(ip.split(":")[1])
         return ports
 
     def __examinePorts(self, activePorts):
-        for port in activePorts:
-            if port in self.observedPorts:
-                if self.debug:
-                    print("Active port: {}".format(port))
-                return True
+        for protocol in activePorts.keys():
+            for port in activePorts[protocol]:
+                if port in self.observedPorts[protocol]:
+                    if self.debug:
+                        print("Active port: {}".format(port))
+                    return True
         return False
 
     def __printDebug(self):
@@ -95,6 +119,6 @@ if __name__ == "__main__":
             sys.exit(2)
         sys.exit(0)
     else:
-        print("usage: %s start|stop|restart".format(sys.argv[0]))
+        print("usage: {} start|stop|restart".format(sys.argv[0]))
         sys.exit(2)
     
