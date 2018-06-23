@@ -94,16 +94,16 @@ class PowerPy(daemon):
             for port in activePorts[protocol]:
                 if port in self.observedPorts[protocol]:
                     if self.debug:
-                        print("Active port: {}".format(port))
+                        sys.stdout.write("Active port: {}".format(port))
                     return True
         return False
 
     def __printDebug(self):
-        print("Observed ports: {}".format(self.observedPorts))
-        print("Active ports: {}".format(self.__getActivePorts()))
-        print("Matched ports: {}".format(self.__examinePorts(self.__getActivePorts())))
-        print("Stopper time: {}".format(self.stopper.timeSpent))
-        print("\n\n ------------------------ \n\n")
+        sys.stdout.write("Observed ports: {}".format(self.observedPorts))
+        sys.stdout.write("Active ports: {}".format(self.__getActivePorts()))
+        sys.stdout.write("Matched ports: {}".format(self.__examinePorts(self.__getActivePorts())))
+        sys.stdout.write("Stopper time: {}".format(self.stopper.timeSpent))
+        sys.stdout.write("\n\n ------------------------ \n\n")
 
 if __name__ == "__main__":
     if len(sys.argv) == 3:
@@ -115,10 +115,10 @@ if __name__ == "__main__":
         elif 'restart' == sys.argv[1]:
             daemon.restart()
         else:
-            print("Unknown command")
+            sys.stdout.write("Unknown command")
             sys.exit(2)
         sys.exit(0)
     else:
-        print("usage: {} start|stop|restart".format(sys.argv[0]))
+        sys.stdout.write("usage: {} start|stop|restart".format(sys.argv[0]))
         sys.exit(2)
     
