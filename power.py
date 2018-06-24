@@ -34,10 +34,11 @@ class PowerPy(daemon):
             else:
                 self.stopper.progress()
                 if self.stopper.timeSpent > self.inactiveTime:
-                    break
+                    self.__runCommand(self.haltCommand)
+                    self.stopper.reset()
         
             sleep(self.observationInterval)
-        self.__runCommand(self.haltCommand)
+        
 
     def __readConf(self):
         config = configparser.ConfigParser()
