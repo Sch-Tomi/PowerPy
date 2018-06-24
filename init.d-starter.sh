@@ -39,8 +39,8 @@ case "$1" in
         if ! is_running; then
             echo "Unable to start, see $stdout_log and $stderr_log"
             exit 1
-                else
-                        echo "Started:" `get_pid`
+        else
+            echo "Started:" `get_pid`
         fi
     fi
     ;;
@@ -74,11 +74,18 @@ case "$1" in
         echo "Not running"
     fi
     ;;
-    restart)
+    thaw|resume|restart)
     cd "$dir"
-    sudo $cmd "restart" $pid_file >> "$stdout_log" 2>> "$stderr_log" &
-    sleep 1
-    $0 status
+    if is_running; then
+        sudo $cmd "restart" $pid_file >> "$stdout_log" 2>> "$stderr_log" &
+        sleep 1
+        $0 status
+    else
+        if [ -f "$pid_file" ]; then
+            rm "$pid_file"
+        fi
+        $0 start
+    fi
     ;;
     status)
     if is_running; then
