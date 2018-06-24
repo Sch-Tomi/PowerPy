@@ -35,18 +35,23 @@ In the installation process you have to edit the starter script. The only thing 
 ### config.ini
 #### BASIC
 - checkInterval: INT
+    ```
     Time passed between two netstat check in seconds
-
+    ```
 - inactiveTime: INT
+    ```
     Inactive counter to run ``haltCommand``
-
+    ```
 - haltCommand: <SCRIPT>
+    ```
     Default is pm-suspend, but you can change to any other.
-
-- debug: 1
+    ```
+- debug: <NUM>
+    ```
     0 - turn debug off
     1 - turn debug on
-
+    ```
+  
 #### TCP,UDP,TCP/UDP
 In each section you can add ports to check by the script. Syntax is simple:
 ```
