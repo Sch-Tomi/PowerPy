@@ -50,7 +50,7 @@ In the installation process you have to edit the starter script. The only thing 
 #### TCP,UDP,TCP/UDP
 In each section you can add ports to check by the script. Syntax is simple:
 ```
-<NAME>=<PORT>
+<NAME>:<PORT>
 ```
 The name is a fictive name, just to recognize your watched ports.
 
