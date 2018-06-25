@@ -2,6 +2,8 @@ import sys
 import subprocess 
 import configparser
 from time import sleep
+import logging
+from logging.handlers import RotatingFileHandler
 
 from deamon import daemon
 from stopper import Stopper
@@ -18,6 +20,10 @@ class PowerPy(daemon):
         self.haltCommand = None
         self.debug = None
 
+        self.debugLogger = None
+        self.uptimeLogger = None
+
+        self.__setUpLoggers()
         self.__readConf()
 
         self.stopper = Stopper()
@@ -34,11 +40,39 @@ class PowerPy(daemon):
             else:
                 self.stopper.progress()
                 if self.stopper.timeSpent > self.inactiveTime:
+                    self.uptimeLogger.info("POWER DOWN")
                     self.__runCommand(self.haltCommand)
                     self.stopper.reset()
+                    self.uptimeLogger.info("POWER UP")
         
             sleep(self.observationInterval)
         
+
+    def __setUpLoggers(self):
+         # Create the Logger
+        self.debugLogger = logging.getLogger(__name__."-DEBUG")
+        self.debugLogger.setLevel(logging.DEBUG)
+
+        self.uptimeLogger = logging.getLogger(__name__."-UPTIME")
+        self.debugLogger.setLevel(logging.DEBUG)
+    
+        # Create the Handler for logging data to a file
+        debug_logger_handler = RotatingFileHandler('./logs/debug.log', mode='a', maxBytes=5*1024*1024, backupCount=2, encoding=None, delay=0)
+        debug_logger_handler.setLevel(logging.DEBUG)
+
+        uptime_logger_handler = RotatingFileHandler('./logs/uptime.log', mode='a', maxBytes=5*1024*1024, backupCount=2, encoding=None, delay=0)
+        uptime_logger_handler.setLevel(logging.DEBUG)
+    
+        # Create a Formatter for formatting the log messages
+        logger_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+        # Add the Formatter to the Handler
+        debug_logger_handler.setFormatter(logger_formatter)
+        uptime_logger_handler.setFormatter(logger_formatter)
+    
+        # Add the Handler to the Logger
+        self.debugLogger.addHandler(debug_logger_handler)
+        self.uptimeLogger.addHandler(uptime_logger_handler)
 
     def __readConf(self):
         config = configparser.ConfigParser()
@@ -95,16 +129,16 @@ class PowerPy(daemon):
             for port in activePorts[protocol]:
                 if port in self.observedPorts[protocol]:
                     if self.debug:
-                        sys.stdout.write("Active port: {}".format(port))
+                        self.debugLogger.debug("Active port: {}".format(port))
                     return True
         return False
 
     def __printDebug(self):
-        sys.stdout.write("Observed ports: {}".format(self.observedPorts))
-        sys.stdout.write("Active ports: {}".format(self.__getActivePorts()))
-        sys.stdout.write("Matched ports: {}".format(self.__examinePorts(self.__getActivePorts())))
-        sys.stdout.write("Stopper time: {}".format(self.stopper.timeSpent))
-        sys.stdout.write("\n\n ------------------------ \n\n")
+        self.debugLogger.debug("Observed ports: {}".format(self.observedPorts))
+        self.debugLogger.debug("Active ports: {}".format(self.__getActivePorts()))
+        self.debugLogger.debug("Matched ports: {}".format(self.__examinePorts(self.__getActivePorts())))
+        self.debugLogger.debug("Stopper time: {}".format(self.stopper.timeSpent))
+        self.debugLogger.debug("\n\n ------------------------ \n\n")
 
 if __name__ == "__main__":
     if len(sys.argv) == 3:
